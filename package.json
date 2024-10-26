@@ -1,0 +1,17 @@
+{
+  "name": "verifiable-ai-mvp",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bash start.sh",
+    "start:frontend": "cd frontend && bun start",
+    "start:backend": "cd backend && bun start"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "concurrently": "^8.2.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
