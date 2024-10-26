@@ -4,19 +4,19 @@
   "type": "module",
   "scripts": {
     "start": "bun run --watch ./src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "tsc": "tsc"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^22.8.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5.6.3"
+    "@types/node": "^22.8.1",
+    "typescript": "^5.6.3",
+    "mongodb-memory-server": "^9.1.6"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.1.1",
     "elysia": "^1.1.23",
-    "mongodb": "^6.11.0",
+    "mongodb": "^6.10.0",
     "mongoose": "^8.7.3"
   }
 }

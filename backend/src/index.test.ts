@@ -1,18 +1,28 @@
-import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { describe, expect, it, beforeAll, afterAll, jest } from "bun:test";
 import { Elysia } from "elysia";
 import { CONFIG } from "./config";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 describe("Verifiable AI MVP Backend", () => {
   let app: Elysia;
+  let mongoServer: MongoMemoryServer;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    // Set up in-memory MongoDB server
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+
     // Import the app dynamically to avoid starting the server immediately
     app = require("./index").app;
   });
 
-  afterAll(() => {
-    // Close the server after all tests
+  afterAll(async () => {
+    // Close the server and database connections after all tests
     app.stop();
+    await mongoose.disconnect();
+    await mongoServer.stop();
   });
 
   it("should respond with 'Hello, AI Credential Verifier!' on GET /", async () => {
@@ -31,4 +41,6 @@ describe("Verifiable AI MVP Backend", () => {
     );
     expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
   });
+
+  // Add more tests for other routes as they are implemented
 });
