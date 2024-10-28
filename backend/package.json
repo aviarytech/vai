@@ -4,19 +4,22 @@
   "type": "module",
   "scripts": {
     "start": "bun run --watch ./src/index.ts",
-    "test": "bun --watch test",
-    "tsc": "tsc"
+    "test": "bun test --preload ./src/test/setup.ts",
+    "test:watch": "bun test --watch --preload ./src/test/setup.ts",
+    "tsc": "tsc",
+    "seed": "bun run src/scripts/seedData.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^22.8.1",
     "typescript": "^5.6.3",
-    "mongodb-memory-server": "^9.1.6"
+    "bun-types": "latest",
+    "mongodb-memory-server": "^8.13.0"
   },
   "dependencies": {
-    "@elysiajs/cors": "^1.1.1",
-    "elysia": "^1.1.23",
+    "elysia": "^0.7.15",
+    "@elysiajs/cors": "^0.7.1",
     "mongodb": "^6.10.0",
-    "mongoose": "^8.7.3"
+    "mongoose": "^7.4.3"
   }
 }
