@@ -64,7 +64,7 @@ export class ChatService {
               },
               input: {
                 prompt,
-                startTimestamp
+                timestamp: startTimestamp
               },
               output: {
                 response,

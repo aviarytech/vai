@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "elysia": "^0.7.15",
-    "@elysiajs/cors": "^0.7.1",
+    "@elysiajs/cors": "^0.7.2",
     "mongodb": "^6.10.0",
     "mongoose": "^7.4.3"
   }
