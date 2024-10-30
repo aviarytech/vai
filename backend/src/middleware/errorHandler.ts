@@ -1,9 +1,4 @@
-import { Elysia } from 'elysia';
-
-export const errorHandler = new Elysia()
-  .onError(({ code, error, set }) => {
-    console.error(`Error [${code}]:`, error);
-    
+export const errorHandler = ({ code, error, set }: { code: string, error: Error, set: any }) => {
     switch (code) {
       case 'NOT_FOUND':
         set.status = 404;
@@ -25,4 +20,4 @@ export const errorHandler = new Elysia()
             : error.message 
         };
     }
-  });
+};

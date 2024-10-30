@@ -79,8 +79,6 @@ describe("Verifiable AI MVP Backend", () => {
       })
     );
     
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(400);
   });
-
-  // Add more tests for other routes as they are implemented
 });

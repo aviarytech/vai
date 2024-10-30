@@ -4,6 +4,7 @@ import { Elysia } from "elysia";
 import { CONFIG } from "../config";
 import { connectToDatabase, disconnectFromDatabase } from "../db";
 import { getAICredentialModel } from "../models/AICredential";
+import { errorHandler } from "../middleware/errorHandler";
 
 describe("Credential Controller", () => {
   let mongoServer: MongoMemoryServer;
@@ -17,7 +18,7 @@ describe("Credential Controller", () => {
     
     // Import controller after database connection
     const { credentialController } = await import("./credentialController");
-    app = new Elysia().use(credentialController);
+    app = new Elysia().onError(errorHandler).use(credentialController);
   });
 
   afterAll(async () => {
@@ -67,7 +68,6 @@ describe("Credential Controller", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentialData),
         }));
-
       expect(response.status).toBe(201);
     });
 
@@ -92,7 +92,7 @@ describe("Credential Controller", () => {
           body: JSON.stringify(incompleteData),
         }));
 
-      expect(response.status).toBe(422);
+      expect(response.status).toBe(400);
     });
   });
 
@@ -172,19 +172,32 @@ describe("Credential Controller", () => {
     // First create a credential
     const AICredential = getAICredentialModel();
     const credential = new AICredential({
-      modelInfo: {
-        name: "GPT-4",
-        version: "1.0",
-        provider: "OpenAI",
+      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      type: ['VerifiableCredential', 'AICredential'],
+      issuer: { id: 'did:example:123' },
+      issuanceDate: new Date().toISOString(),
+      credentialSubject: {
+        modelInfo: {
+          name: "GPT-4",
+          version: "1.0",
+          provider: "OpenAI",
+        },
+        input: {
+          prompt: "Test prompt",
+          timestamp: "2024-03-20T10:00:00Z",
+        },
+        output: {
+          response: "Test response",
+          timestamp: "2024-03-20T10:00:01Z",
+        }
       },
-      input: {
-        prompt: "Test prompt",
-        timestamp: "2024-03-20T10:00:00Z",
-      },
-      output: {
-        response: "Test response",
-        timestamp: "2024-03-20T10:00:01Z",
-      },
+      proof: {
+        type: "Ed25519Signature2020",
+        created: new Date().toISOString(),
+        verificationMethod: "did:example:123#key-1",
+        proofPurpose: "assertionMethod",
+        proofValue: "test"
+      }
     });
     await credential.save();
 
@@ -223,7 +236,7 @@ describe("Credential Controller", () => {
     expect((result as any).error).toBe("Credential not found");
   });
 
-  it.only("should fail to verify provided credential data", async () => {
+  it("should fail to verify provided credential data", async () => {
     const response = await app.handle(
       new Request("http://localhost/api/credentials/verify", {
         method: "POST",
@@ -250,6 +263,6 @@ describe("Credential Controller", () => {
       })
     );
 
-    expect(response.status).toBe(422);
+    expect(response.status).toBe(400);
   });
 });

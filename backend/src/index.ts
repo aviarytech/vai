@@ -10,7 +10,7 @@ await connectToDatabase();
 
 const app = new Elysia()
   .use(cors({
-    origin: CONFIG.CORS_ORIGINS,
+    origin: CONFIG.CORS_ORIGINS || ['http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposeHeaders: ['Content-Range', 'X-Content-Range'],
@@ -18,7 +18,7 @@ const app = new Elysia()
     maxAge: 3600,
     preflight: true
   }))
-  .use(errorHandler)
+  .onError(errorHandler)
   .use(credentialController)
   .use(chatController)
   .get('/', () => 'Hello, AI Credential Verifier!')

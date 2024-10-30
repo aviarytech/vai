@@ -4,22 +4,50 @@ import { VerificationService } from '../services/verificationService';
 import { VerificationRecord } from '../models/VerificationRecord';
 import { SearchService, SearchParams } from '../services/searchService';
 
+// Add this type definition at the top of the file
+type VerifiableCredential = {
+  '@context': string[];
+  type: string[];
+  issuer: string | { id: string; name?: string };
+  credentialSubject: {
+    modelInfo: {
+      name: string;
+      version: string;
+      provider: string;
+    };
+    input: {
+      prompt: string;
+      timestamp: string;
+    };
+    output: {
+      response: string;
+      timestamp: string;
+    };
+  };
+  issuanceDate: string;
+  proof: {
+    type: string;
+    created: string;
+    verificationMethod: string;
+    proofPurpose: string;
+    proofValue: string;
+  };
+};
+
 export const credentialController = new Elysia({ prefix: '/api' })
   .post('/credentials', async ({ body, set }) => {
-    const { modelInfo, input, output } = body;
+    const vc = body as VerifiableCredential;
     const AICredential = getAICredentialModel();
 
-    if (!modelInfo.name || !input.prompt || !output.response) {
+    if (!vc.credentialSubject?.modelInfo?.name || 
+        !vc.credentialSubject?.input?.prompt || 
+        !vc.credentialSubject?.output?.response) {
       set.status = 400;
-      return { error: 'All fields are required' };
+      return { error: 'Required fields missing in Verifiable Credential' };
     }
 
     try {
-      const credential = new AICredential({
-        modelInfo,
-        input,
-        output
-      });
+      const credential = new AICredential(vc);
 
       await credential.save();
 
@@ -32,18 +60,37 @@ export const credentialController = new Elysia({ prefix: '/api' })
     }
   }, {
     body: t.Object({
-      modelInfo: t.Object({
-        name: t.String(),
-        version: t.String(),
-        provider: t.String()
+      '@context': t.Array(t.String()),
+      type: t.Array(t.String()),
+      issuer: t.Union([
+        t.String(),
+        t.Object({
+          id: t.String(),
+          name: t.Optional(t.String())
+        })
+      ]),
+      credentialSubject: t.Object({
+        modelInfo: t.Object({
+          name: t.String(),
+          version: t.String(),
+          provider: t.String()
+        }),
+        input: t.Object({
+          prompt: t.String(),
+          timestamp: t.String()
+        }),
+        output: t.Object({
+          response: t.String(),
+          timestamp: t.String()
+        })
       }),
-      input: t.Object({
-        prompt: t.String(),
-        timestamp: t.String()
-      }),
-      output: t.Object({
-        response: t.String(),
-        timestamp: t.String()
+      issuanceDate: t.String(),
+      proof: t.Object({
+        type: t.String(),
+        created: t.String(),
+        verificationMethod: t.String(),
+        proofPurpose: t.String(),
+        proofValue: t.String()
       })
     })
   })
