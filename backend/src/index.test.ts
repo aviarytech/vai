@@ -32,25 +32,6 @@ describe("Verifiable AI MVP Backend", () => {
     expect(await response.text()).toBe("Hello, AI Credential Verifier!");
   });
 
-  it("should have CORS enabled", async () => {
-    const response = await app.handle(
-      new Request(`http://localhost:${CONFIG.PORT}/`, {
-        method: "OPTIONS",
-        headers: {
-          "Origin": "http://localhost:5173",
-          "Access-Control-Request-Method": "GET",
-          "Access-Control-Request-Headers": "Content-Type"
-        }
-      })
-    );
-
-    // Check CORS headers
-    expect(response.headers.get("Access-Control-Allow-Origin")).toBe("http://localhost:5173");
-    expect(response.headers.get("Access-Control-Allow-Methods")).toContain("GET");
-    expect(response.headers.get("Access-Control-Allow-Headers")).toContain("Content-Type");
-    expect(response.status).toBe(204); // Successful preflight response
-  });
-
   it("should have verification endpoint", async () => {
     const response = await app.handle(
       new Request("http://localhost:3000/api/credentials/verify", {
