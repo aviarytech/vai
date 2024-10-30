@@ -1,0 +1,11 @@
+POST http://localhost:5151/api/credentials
+Content-Type: application/json
+
+{
+  "templateId": "6721de5d37a8daab25dffa19",
+  "credentialSubject": {
+    "modelInfo": "test",
+    "input": "test",
+    "output": "test"
+  }
+}

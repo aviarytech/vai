@@ -78,7 +78,7 @@ export const credentialController = new Elysia({ prefix: '/api' })
       let verificationResult;
       let credentialId;
 
-      if (body.credentialId) {
+      if ('credentialId' in body) {
         const credential = await AICredential.findById(body.credentialId);
         if (!credential) {
           set.status = 404;
@@ -87,8 +87,8 @@ export const credentialController = new Elysia({ prefix: '/api' })
         credentialId = body.credentialId;
         verificationResult = await VerificationService.verifyCredential(credential);
       } else {
-        const credential = new AICredential(body);
-        verificationResult = await VerificationService.verifyCredential(credential);
+        // Handle direct verification of credential data
+        verificationResult = await VerificationService.verifyCredential(body);
         credentialId = 'uploaded-credential';
       }
 
@@ -106,22 +106,47 @@ export const credentialController = new Elysia({ prefix: '/api' })
       return { error: 'Internal server error' };
     }
   }, {
-    body: t.Object({
-      credentialId: t.Optional(t.String()),
-      modelInfo: t.Optional(t.Object({
-        name: t.String(),
-        version: t.String(),
-        provider: t.String()
-      })),
-      input: t.Optional(t.Object({
-        prompt: t.String(),
-        timestamp: t.String()
-      })),
-      output: t.Optional(t.Object({
-        response: t.String(),
-        timestamp: t.String()
-      }))
-    })
+    body: t.Union([
+      // Option 1: Verify by credentialId
+      t.Object({
+        credentialId: t.String()
+      }),
+      // Option 2: Verify full verifiable credential
+      t.Object({
+        '@context': t.Array(t.String()),
+        type: t.Array(t.String()),
+        issuer: t.Union([
+          t.String(),
+          t.Object({
+            id: t.String(),
+            name: t.Optional(t.String())
+          })
+        ]),
+        credentialSubject: t.Object({
+          modelInfo: t.Object({
+            name: t.String(),
+            version: t.String(),
+            provider: t.String()
+          }),
+          input: t.Object({
+            prompt: t.String(),
+            timestamp: t.String()
+          }),
+          output: t.Object({
+            response: t.String(),
+            timestamp: t.String()
+          })
+        }),
+        issuanceDate: t.String(),
+        proof: t.Object({
+          type: t.String(),
+          created: t.String(),
+          verificationMethod: t.String(),
+          proofPurpose: t.String(),
+          proofValue: t.String()
+        })
+      })
+    ])
   })
   .get('/credentials/search', async ({ query, set }) => {
     try {

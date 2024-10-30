@@ -12,34 +12,33 @@ export class SearchService {
   static async searchCredentials(params: SearchParams) {
     const AICredential = getAICredentialModel();
     const query: any = {};
-
     if (params.modelName) {
-      query['modelInfo.name'] = { $regex: params.modelName, $options: 'i' };
+      query['credentialSubject.modelInfo.name'] = { $regex: params.modelName, $options: 'i' };
     }
 
     if (params.provider) {
-      query['modelInfo.provider'] = { $regex: params.provider, $options: 'i' };
+      query['credentialSubject.modelInfo.provider'] = { $regex: params.provider, $options: 'i' };
     }
 
     if (params.startDate || params.endDate) {
-      query['input.timestamp'] = {};
+      query['credentialSubject.input.timestamp'] = {};
       if (params.startDate) {
-        query['input.timestamp'].$gte = params.startDate;
+        query['credentialSubject.input.timestamp'].$gte = params.startDate;
       }
       if (params.endDate) {
-        query['input.timestamp'].$lte = params.endDate;
+        query['credentialSubject.input.timestamp'].$lte = params.endDate;
       }
     }
 
     if (params.searchTerm) {
       query.$or = [
-        { 'input.prompt': { $regex: params.searchTerm, $options: 'i' } },
-        { 'output.response': { $regex: params.searchTerm, $options: 'i' } }
+        { 'credentialSubject.input.prompt': { $regex: params.searchTerm, $options: 'i' } },
+        { 'credentialSubject.output.response': { $regex: params.searchTerm, $options: 'i' } }
       ];
     }
 
     const results = await AICredential.find(query)
-      .sort({ 'input.timestamp': -1 })
+      .sort({ 'credentialSubject.input.timestamp': -1 })
       .limit(100);
     
     return results;

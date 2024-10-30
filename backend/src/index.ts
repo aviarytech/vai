@@ -4,6 +4,7 @@ import { CONFIG } from './config';
 import { credentialController } from './controllers/credentialController';
 import { connectToDatabase } from './db';
 import { chatController } from './controllers/chatController';
+import { errorHandler } from './middleware/errorHandler';
 
 await connectToDatabase();
 
@@ -17,6 +18,7 @@ const app = new Elysia()
     maxAge: 3600,
     preflight: true
   }))
+  .use(errorHandler)
   .use(credentialController)
   .use(chatController)
   .get('/', () => 'Hello, AI Credential Verifier!')

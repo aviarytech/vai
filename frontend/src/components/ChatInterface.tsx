@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, FormEvent } from 'react';
 import { CONFIG } from '../config';
 
 interface Message {
@@ -12,8 +12,9 @@ function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
@@ -51,6 +52,8 @@ function ChatInterface() {
       // Handle error appropriately
     } finally {
       setIsLoading(false);
+      // Restore focus to input after loading completes
+      inputRef.current?.focus();
     }
   };
 
@@ -106,12 +109,14 @@ function ChatInterface() {
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
           <div className="flex gap-2">
             <input
+              ref={inputRef}
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
+              autoFocus
             />
             <button
               type="submit"

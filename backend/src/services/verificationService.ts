@@ -1,4 +1,4 @@
-import { IAICredential } from '../models/AICredential';
+import { IVerifiableCredential } from "../models/AICredential";
 
 export interface VerificationResult {
   isValid: boolean;
@@ -11,26 +11,26 @@ export interface VerificationResult {
 }
 
 export class VerificationService {
-  static async verifyCredential(credential: IAICredential): Promise<VerificationResult> {
+  static async verifyCredential(credential: IVerifiableCredential): Promise<VerificationResult> {
     try {
       // Verify model info exists
       const modelVerified = Boolean(
-        credential.modelInfo?.name &&
-        credential.modelInfo?.version &&
-        credential.modelInfo?.provider
+        credential.credentialSubject.modelInfo?.name &&
+        credential.credentialSubject.modelInfo?.version &&
+        credential.credentialSubject.modelInfo?.provider
       );
 
       // Verify timestamps are valid and input timestamp is before output
-      const inputTime = new Date(credential.input.timestamp).getTime();
-      const outputTime = new Date(credential.output.timestamp).getTime();
+      const inputTime = new Date(credential.credentialSubject.input.timestamp).getTime();
+      const outputTime = new Date(credential.credentialSubject.output.timestamp).getTime();
       const timestampVerified = !isNaN(inputTime) && 
                                !isNaN(outputTime) && 
                                inputTime < outputTime;
 
       // Verify input and output exist and make sense together
       const inputOutputMatch = Boolean(
-        credential.input?.prompt &&
-        credential.output?.response
+        credential.credentialSubject.input?.prompt &&
+        credential.credentialSubject.output?.response
       );
 
       const isValid = modelVerified && timestampVerified && inputOutputMatch;
@@ -44,6 +44,7 @@ export class VerificationService {
         }
       };
     } catch (error) {
+      console.error(error)
       return {
         isValid: false,
         details: {

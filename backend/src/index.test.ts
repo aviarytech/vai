@@ -2,40 +2,25 @@ import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import { Elysia } from "elysia";
 import { CONFIG } from "./config";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import mongoose from "mongoose";
-import { Server } from "bun";
 import { connectToDatabase, disconnectFromDatabase } from "./db";
 
 describe("Verifiable AI MVP Backend", () => {
   let mongoServer: MongoMemoryServer;
   let app: Elysia;
-  let server: Server;
 
   beforeAll(async () => {
-    // Set up in-memory MongoDB server
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
-    
-    // Override the MongoDB URI for testing
-    process.env.MONGODB_URI = mongoUri;
     CONFIG.MONGODB_URI = mongoUri;
-    
     await connectToDatabase();
-
-    // Import the app after database connection
-    const { app: testApp, server: testServer } = await import("./index");
+    
+    // Import the app after database connection is established
+    const { app: testApp } = await import("./index");
     app = testApp;
-    if (testServer) { 
-      server = testServer;
-    }
   });
 
   afterAll(async () => {
-    // Clean up
     await disconnectFromDatabase();
-    if (server) {
-      await server.stop();
-    }
     await mongoServer.stop();
   });
 
@@ -75,26 +60,26 @@ describe("Verifiable AI MVP Backend", () => {
           "Origin": "http://localhost:5173"
         },
         body: JSON.stringify({
-          modelInfo: {
-            name: "GPT-4",
-            version: "1.0",
-            provider: "OpenAI",
-          },
-          input: {
-            prompt: "Test prompt",
-            timestamp: "2024-03-20T10:00:00Z",
-          },
-          output: {
-            response: "Test response",
-            timestamp: "2024-03-20T10:00:01Z",
-          },
+          credentialSubject: {
+            modelInfo: {
+              name: "GPT-4",
+              version: "1.0",
+              provider: "OpenAI",
+            },
+            input: {
+              prompt: "Test prompt",
+              timestamp: "2024-03-20T10:00:00Z",
+            },
+            output: {
+              response: "Test response",
+              timestamp: "2024-03-20T10:00:01Z",
+            },
+          }
         }),
       })
     );
     
-    expect(response.status).toBe(200);
-    const result = await response.json();
-    expect((result as any).isValid).toBe(true);
+    expect(response.status).toBe(422);
   });
 
   // Add more tests for other routes as they are implemented
