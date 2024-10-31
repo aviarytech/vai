@@ -13,14 +13,16 @@ await connectToDatabase();
 
 const app = new Elysia()
   .use(cors({
-    origin: CONFIG.CORS_ORIGINS || ['http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
-    credentials: true,
     maxAge: 3600,
+    credentials: true,
     preflight: true
   }))
+  .onRequest(({ set }) => {
+    set.headers['Access-Control-Allow-Origin'] = CONFIG.CORS_ORIGINS.join(', ');
+  })
   .onError(errorHandler)
   .use(credentialController)
   .use(chatController)

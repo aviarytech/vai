@@ -17,8 +17,8 @@
     "mongodb-memory-server": "^8.13.0"
   },
   "dependencies": {
-    "elysia": "^0.7.15",
-    "@elysiajs/cors": "^0.7.2",
+    "elysia": "^1.1.23",
+    "@elysiajs/cors": "^1.1.1",
     "mongodb": "^6.10.0",
     "mongoose": "^7.4.3"
   }
