@@ -47,6 +47,7 @@ const aiCredentialSchema = new Schema<AICredential>(
       required: true
     },
     credentialSubject: new Schema({
+      id: { type: String, required: true },
       modelInfo: {
         name: { type: String, required: true },
         version: { type: String, required: true },

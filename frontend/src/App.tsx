@@ -1,20 +1,24 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ChatInterface from './components/ChatInterface';
-import VerifyCredential from './components/VerifyCredential';
-import Navbar from './components/Navbar';
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Header } from './components/Header'
+import { Conversations } from './pages/Conversations'
+import { ConversationDetail } from './pages/ConversationDetail'
+import ChatInterface from './components/ChatInterface'
+import { Landing } from './pages/Landing'
 
-function App() {
+export function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<ChatInterface />} />
-          <Route path="/verify" element={<VerifyCredential />} />
-        </Routes>
+    <BrowserRouter>
+      <div className="min-h-screen">
+        <Header />
+        <main className="pt-16">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/chat/:id" element={<ChatInterface />} />
+            <Route path="/conversations" element={<Conversations />} />
+            <Route path="/conversation/:id" element={<ConversationDetail />} />
+          </Routes>
+        </main>
       </div>
-    </Router>
-  );
+    </BrowserRouter>
+  )
 }
-
-export default App;

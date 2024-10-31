@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { CONFIG } from './config';
+import { conversationRoutes } from './routes/conversation';
 import { credentialController } from './controllers/credentialController';
 import { connectToDatabase } from './db';
 import { chatController } from './controllers/chatController';
@@ -22,6 +23,7 @@ const app = new Elysia()
   }))
   .onError(errorHandler)
   .use(credentialController)
+  .use(conversationRoutes)
   .use(chatController)
   .get('/', () => 'Hello, AI Credential Verifier!')
   .listen(CONFIG.PORT);

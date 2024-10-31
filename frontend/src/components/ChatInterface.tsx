@@ -1,20 +1,70 @@
-import { useState, useRef, FormEvent } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { CONFIG } from '../config';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
-  credentialId?: string; // Reference to the credential created for this message
+  credentialId?: string;
   timestamp: string;
 }
 
+interface VerifiableCredential {
+  credentialSubject: {
+    role: 'user' | 'assistant';
+    message: string;
+    timestamp: string;
+    id: string;
+  }
+}
+
 function ChatInterface() {
+  const { id: conversationId } = useParams<{ id: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [shouldFocus, setShouldFocus] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = async (e: FormEvent) => {
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (!conversationId) return;
+
+      try {
+        const response = await fetch(`${CONFIG.API_BASE_URL}/conversations/${conversationId}`);
+        if (!response.ok) {
+          throw new Error('Failed to load conversation');
+        }
+
+        const data = await response.json();
+        if (data.success && data.data.verifiablePresentation) {
+          const loadedMessages = data.data.verifiablePresentation.verifiableCredential.map(
+            (vc: VerifiableCredential) => ({
+              role: vc.credentialSubject.role,
+              content: vc.credentialSubject.message,
+              credentialId: vc.credentialSubject.id,
+              timestamp: vc.credentialSubject.timestamp
+            })
+          );
+          setMessages(loadedMessages);
+        }
+      } catch (error) {
+        console.error('Error loading conversation:', error);
+      }
+    };
+
+    loadConversation();
+  }, [conversationId]);
+
+  // Use a single effect for focus management
+  useEffect(() => {
+    if (shouldFocus && inputRef.current && !isLoading) {
+      inputRef.current.focus();
+      setShouldFocus(false);
+    }
+  }, [shouldFocus, isLoading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
@@ -29,37 +79,58 @@ function ChatInterface() {
     setIsLoading(true);
 
     try {
-      // 1. Get AI response
-      const aiResponse = await fetch(`${CONFIG.API_BASE_URL}/chat`, {
+      // Send message to backend
+      const response = await fetch(`${CONFIG.API_BASE_URL}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: inputMessage })
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          prompt: inputMessage,
+          conversationId
+        })
       });
       
-      const { response, credentialId } = await aiResponse.json();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
+      }
 
-      // 2. Add assistant message with credential reference
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to get response');
+      }
+
       const assistantMessage: Message = {
         role: 'assistant',
-        content: response,
-        credentialId,
+        content: data.response,
+        credentialId: data.credentialId,
         timestamp: new Date().toISOString()
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Failed to get response:', error);
-      // Handle error appropriately
+      // Add error message to UI
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: error instanceof Error ? error.message : 'An error occurred',
+        timestamp: new Date().toISOString()
+      }]);
     } finally {
       setIsLoading(false);
-      // Restore focus to input after loading completes
-      inputRef.current?.focus();
+      setShouldFocus(true); // Request focus after completion
     }
   };
 
+  // Request focus when component mounts
+  useEffect(() => {
+    setShouldFocus(true);
+  }, []);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)]"> {/* Subtract navbar height */}
-      {/* Messages container with single scroll area */}
+    <div className="flex flex-col h-[calc(100vh-64px)]">
       <div className="flex-1 relative">
         <div className="absolute inset-0 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-4 space-y-4">
@@ -104,7 +175,6 @@ function ChatInterface() {
         </div>
       </div>
 
-      {/* Input area */}
       <div className="bg-white border-t">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
           <div className="flex gap-2">
@@ -113,10 +183,10 @@ function ChatInterface() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
+              onBlur={() => setShouldFocus(true)} // Request focus when input loses focus
               placeholder="Type your message..."
               className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
-              autoFocus
             />
             <button
               type="submit"

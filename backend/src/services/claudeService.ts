@@ -1,5 +1,10 @@
 import { CONFIG } from '../config';
 
+interface ClaudeMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface ClaudeResponse {
   content: Array<{ text: string }>;
   model: string;
@@ -10,14 +15,15 @@ export class ClaudeService {
   private static readonly API_KEY = CONFIG.AI_SERVICE.API_KEY;
   private static readonly MODEL = CONFIG.AI_SERVICE.MODEL;
 
-  static async generateResponse(prompt: string): Promise<{
+  static async generateResponse(messages: ClaudeMessage[]): Promise<{
     response: string;
     model: string;
   }> {
     if (CONFIG.AI_SERVICE.MOCK_RESPONSES) {
       console.log('Using mock response for Claude API');
+      const lastMessage = messages[messages.length - 1];
       return {
-        response: `[MOCK RESPONSE] This is a mock response to: "${prompt}"`,
+        response: `[MOCK RESPONSE] This is a mock response to: "${lastMessage.content}"`,
         model: this.MODEL
       };
     }
@@ -38,10 +44,7 @@ export class ClaudeService {
         },
         body: JSON.stringify({
           model: this.MODEL,
-          messages: [{ 
-            role: 'user', 
-            content: prompt 
-          }],
+          messages: messages,
           max_tokens: 1024,
           system: "You are a helpful AI assistant."
         })
