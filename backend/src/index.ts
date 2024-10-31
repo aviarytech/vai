@@ -6,6 +6,9 @@ import { connectToDatabase } from './db';
 import { chatController } from './controllers/chatController';
 import { errorHandler } from './middleware/errorHandler';
 
+
+console.log('CORS_ORIGINS', CONFIG.CORS_ORIGINS);
+
 await connectToDatabase();
 
 const app = new Elysia()
