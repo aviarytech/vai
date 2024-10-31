@@ -6,13 +6,13 @@ import { connectToDatabase } from './db';
 import { chatController } from './controllers/chatController';
 import { errorHandler } from './middleware/errorHandler';
 
-
 console.log('CORS_ORIGINS', CONFIG.CORS_ORIGINS);
 
 await connectToDatabase();
 
 const app = new Elysia()
   .use(cors({
+    origin: CONFIG.CORS_ORIGINS || ['http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     exposedHeaders: ['Content-Range', 'X-Content-Range'],
@@ -20,8 +20,11 @@ const app = new Elysia()
     credentials: true,
     preflight: true
   }))
-  .onRequest(({ set }) => {
-    set.headers['Access-Control-Allow-Origin'] = CONFIG.CORS_ORIGINS.join(', ');
+  .onRequest(({ request, set }) => {
+    const origin = request.headers.get('origin');
+    if (origin && CONFIG.CORS_ORIGINS.includes(origin)) {
+      set.headers['Access-Control-Allow-Origin'] = origin;
+    }
   })
   .onError(errorHandler)
   .use(credentialController)
