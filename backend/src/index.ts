@@ -15,17 +15,11 @@ const app = new Elysia()
     origin: CONFIG.CORS_ORIGINS || ['http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    exposeHeaders: ['Content-Range', 'X-Content-Range'],
     maxAge: 3600,
     credentials: true,
     preflight: true
   }))
-  .onRequest(({ request, set }) => {
-    const origin = request.headers.get('origin');
-    if (origin && CONFIG.CORS_ORIGINS.includes(origin)) {
-      set.headers['Access-Control-Allow-Origin'] = origin;
-    }
-  })
   .onError(errorHandler)
   .use(credentialController)
   .use(chatController)
