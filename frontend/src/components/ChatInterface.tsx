@@ -130,52 +130,48 @@ function ChatInterface() {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-64px)]">
-      <div className="flex-1 relative">
-        <div className="absolute inset-0 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-4 space-y-4">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-4 ${
-                    message.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  <p>{message.content}</p>
-                  {message.credentialId && (
-                    <div className="mt-2 text-xs opacity-75">
-                      <a
-                        href={`/verify?id=${message.credentialId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline"
-                      >
-                        Verify Response
-                      </a>
-                    </div>
-                  )}
+    <div className="relative h-full min-h-screen pb-24">
+      <div className="max-w-4xl mx-auto p-4 space-y-4 mb-24">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
+          >
+            <div
+              className={`max-w-[80%] rounded-lg p-4 ${
+                message.role === 'user'
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-900'
+              }`}
+            >
+              <p>{message.content}</p>
+              {message.credentialId && (
+                <div className="mt-2 text-xs opacity-75">
+                  <a
+                    href={`/verify?id=${message.credentialId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    Verify Response
+                  </a>
                 </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-4">
-                  <div className="animate-pulse">Thinking...</div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        ))}
+        {isLoading && (
+          <div className="flex justify-start">
+            <div className="bg-gray-100 rounded-lg p-4">
+              <div className="animate-pulse">Thinking...</div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="bg-white border-t sticky bottom-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
           <div className="flex gap-2">
             <input
@@ -183,7 +179,7 @@ function ChatInterface() {
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              onBlur={() => setShouldFocus(true)} // Request focus when input loses focus
+              onBlur={() => setShouldFocus(true)}
               placeholder="Type your message..."
               className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isLoading}
