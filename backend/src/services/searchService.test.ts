@@ -33,6 +33,7 @@ describe('SearchService', () => {
       issuer: { id: 'did:example:123' },
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
+        id: 'urn:uuid:123',
         modelInfo: {
           name: 'test-model',
           version: '1.0',

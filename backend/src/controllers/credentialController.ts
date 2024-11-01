@@ -10,6 +10,7 @@ type VerifiableCredential = {
   type: string[];
   issuer: string | { id: string; name?: string };
   credentialSubject: {
+    id: string;
     modelInfo: {
       name: string;
       version: string;
@@ -39,7 +40,8 @@ export const credentialController = new Elysia({ prefix: '/api' })
     const vc = body as VerifiableCredential;
     const AICredential = getAICredentialModel();
 
-    if (!vc.credentialSubject?.modelInfo?.name || 
+    if (!vc.credentialSubject?.id ||
+        !vc.credentialSubject?.modelInfo?.name || 
         !vc.credentialSubject?.input?.prompt || 
         !vc.credentialSubject?.output?.response) {
       set.status = 400;
@@ -70,6 +72,7 @@ export const credentialController = new Elysia({ prefix: '/api' })
         })
       ]),
       credentialSubject: t.Object({
+        id: t.String(),
         modelInfo: t.Object({
           name: t.String(),
           version: t.String(),

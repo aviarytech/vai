@@ -39,6 +39,7 @@ describe("Credential Controller", () => {
         issuer: { id: 'did:example:123' },
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
+          id: 'urn:uuid:123',
           modelInfo: {
             name: "GPT-4",
             version: "1.0",
@@ -66,7 +67,7 @@ describe("Credential Controller", () => {
         .handle(new Request("http://localhost/api/credentials", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(credentialData),
+          body: JSON.stringify({ ...credentialData, id: 'urn:uuid:123' }),
         }));
       expect(response.status).toBe(201);
     });
@@ -106,6 +107,7 @@ describe("Credential Controller", () => {
           issuer: { id: 'did:example:123' },
           issuanceDate: new Date().toISOString(),
           credentialSubject: {
+            id: 'urn:uuid:123',
             modelInfo: { name: "GPT-4", version: "1.0", provider: "OpenAI" },
             input: { prompt: "Question 1", timestamp: new Date().toISOString() },
             output: { response: "Answer 1", timestamp: new Date().toISOString() }
@@ -124,6 +126,7 @@ describe("Credential Controller", () => {
           issuer: { id: 'did:example:123' },
           issuanceDate: new Date().toISOString(),
           credentialSubject: {
+            id: 'urn:uuid:123',
             modelInfo: { name: "DALL-E", version: "2.0", provider: "OpenAI" },
             input: { prompt: "Question 2", timestamp: new Date().toISOString() },
             output: { response: "Answer 2", timestamp: new Date().toISOString() }
@@ -177,6 +180,7 @@ describe("Credential Controller", () => {
       issuer: { id: 'did:example:123' },
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
+        id: 'urn:uuid:123',
         modelInfo: {
           name: "GPT-4",
           version: "1.0",

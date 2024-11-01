@@ -29,7 +29,7 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 bg-white z-50 border-b shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="text-xl font-bold">AI Chat</Link>
+          <Link to="/" className="text-xl font-bold">VAI</Link>
           <div className="flex gap-4">
             <Link 
               to="/conversations" 

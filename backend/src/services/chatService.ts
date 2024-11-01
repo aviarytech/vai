@@ -1,6 +1,7 @@
 import { getAICredentialModel } from '../models/AICredential';
 import { CONFIG } from '../config';
 import { ClaudeService } from './claudeService';
+import { randomUUID } from 'crypto';
 
 export interface ChatResponse {
   response: string;
@@ -25,6 +26,7 @@ interface AcesVerifiableCredential {
     input: {
       prompt: string;
       timestamp: string;
+      previousMessages?: string[];
     };
     output: {
       response: string;
@@ -44,6 +46,7 @@ interface AcesVerifiableCredential {
 export class ChatService {
   static async processChat(prompt: string, conversationId: string): Promise<ChatResponse> {
     try {
+      console.log(`Processing chat for conversation: ${conversationId}`);
       // Get previous messages from conversation
       const AICredential = getAICredentialModel();
       const previousCredentials = await AICredential.find({
@@ -74,7 +77,10 @@ export class ChatService {
       // Get response from Claude
       const { response: aiResponse, model } = await ClaudeService.generateResponse(messages);
 
-      // Create verifiable credential
+      // Create verifiable credential with UUID and previous message IDs
+      const id = `urn:uuid:${randomUUID()}`;
+      const previousMessageIds = previousCredentials.map(vc => vc.id);
+
       const acesResponse = await fetch(CONFIG.ACES_API_URL + '/credentials', {
         method: 'POST',
         headers: {
@@ -83,6 +89,7 @@ export class ChatService {
         },
         body: JSON.stringify({
           templateId: CONFIG.ACES_TEMPLATE_ID,
+          id,
           credentialSubject: {
             id: conversationId,
             modelInfo: {
@@ -92,7 +99,8 @@ export class ChatService {
             },
             input: {
               prompt,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              previousMessages: previousMessageIds
             },
             output: {
               response: aiResponse,
@@ -101,13 +109,13 @@ export class ChatService {
           }
         })
       });
-
+      
       if (!acesResponse.ok) {
         throw new Error(`Failed to create verifiable credential: ${acesResponse.statusText}`);
       }
 
       const verifiableCredential = await acesResponse.json() as AcesVerifiableCredential;
-      console.log(`Saving VC with ID: ${conversationId}`, verifiableCredential);
+      console.log(`Saving VC with ID: ${verifiableCredential.id}, `, verifiableCredential);
       
       // Save the entire verifiable credential
       const credential = new AICredential(verifiableCredential);
@@ -128,6 +136,7 @@ export class ChatService {
 
       if (error instanceof Error) {
         console.error('Detailed Aces API error:', error);
+        console.log(`Error message: ${error.message}`);
         throw new Error(
           `Failed to create verifiable credential: ${error.message}\n` +
           'Please check the server logs for more details.'

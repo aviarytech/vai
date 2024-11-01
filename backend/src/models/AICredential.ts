@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // Base interface without Document properties
 export interface IVerifiableCredential {
-  id?: string;
+  id: string;
   '@context': string[];
   type: string[];
   issuer: {
@@ -10,6 +10,7 @@ export interface IVerifiableCredential {
     name?: string;
   } | string;
   credentialSubject: {
+    id: string;
     modelInfo: {
       name: string;
       version: string;
@@ -18,6 +19,7 @@ export interface IVerifiableCredential {
     input: {
       prompt: string;
       timestamp: string;
+      previousMessages?: string[];
     };
     output: {
       response: string;
@@ -39,11 +41,11 @@ export interface AICredential extends Omit<Document, 'id'>, IVerifiableCredentia
 
 const aiCredentialSchema = new Schema<AICredential>(
   {
-    id: { type: String, sparse: true },
+    id: { type: String, required: true, unique: true },
     '@context': { type: [String], required: true },
     type: { type: [String], required: true },
     issuer: {
-      type: Schema.Types.Mixed,  // Allow both string and object
+      type: Schema.Types.Mixed,
       required: true
     },
     credentialSubject: new Schema({
@@ -55,6 +57,7 @@ const aiCredentialSchema = new Schema<AICredential>(
       },
       input: {
         prompt: { type: String, required: true },
+        previousMessages: { type: [String] },
         timestamp: { type: String, required: true }
       },
       output: {
