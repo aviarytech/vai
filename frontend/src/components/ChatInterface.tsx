@@ -130,7 +130,7 @@ function ChatInterface() {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
+    <div className="flex flex-col h-[calc(100dvh-64px)]">
       <div className="flex-1 relative">
         <div className="absolute inset-0 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-4 space-y-4">
@@ -175,7 +175,7 @@ function ChatInterface() {
         </div>
       </div>
 
-      <div className="bg-white border-t">
+      <div className="bg-white border-t sticky bottom-0">
         <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-4">
           <div className="flex gap-2">
             <input
