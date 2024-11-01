@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { getAICredentialModel } from '../models/AICredential';
+import { getAICredentialModel, IVerifiableCredential } from '../models/AICredential';
 import { VerificationService } from '../services/verificationService';
 import { VerificationRecord } from '../models/VerificationRecord';
 import { SearchService, SearchParams } from '../services/searchService';
@@ -138,7 +138,7 @@ export const credentialController = new Elysia({ prefix: '/api' })
         verificationResult = await VerificationService.verifyCredential(credential);
       } else {
         // Handle direct verification of credential data
-        verificationResult = await VerificationService.verifyCredential(body);
+        verificationResult = await VerificationService.verifyCredential(body as IVerifiableCredential);
         credentialId = 'uploaded-credential';
       }
 

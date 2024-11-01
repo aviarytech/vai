@@ -32,11 +32,12 @@ describe("Credential Controller", () => {
   });
 
   describe("createCredential", () => {
-    it("should create a new credential", async () => {
+    it.only("should create a new credential", async () => {
       const credentialData = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'AICredential'],
         issuer: { id: 'did:example:123' },
+        id: 'urn:uuid:456',
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
           id: 'urn:uuid:123',
@@ -67,7 +68,7 @@ describe("Credential Controller", () => {
         .handle(new Request("http://localhost/api/credentials", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...credentialData, id: 'urn:uuid:123' }),
+          body: JSON.stringify(credentialData),
         }));
       expect(response.status).toBe(201);
     });
@@ -105,9 +106,10 @@ describe("Credential Controller", () => {
           '@context': ['https://www.w3.org/2018/credentials/v1'],
           type: ['VerifiableCredential', 'AICredential'],
           issuer: { id: 'did:example:123' },
+          id: 'urn:uuid:123',
           issuanceDate: new Date().toISOString(),
           credentialSubject: {
-            id: 'urn:uuid:123',
+            id: 'urn:uuid:def',
             modelInfo: { name: "GPT-4", version: "1.0", provider: "OpenAI" },
             input: { prompt: "Question 1", timestamp: new Date().toISOString() },
             output: { response: "Answer 1", timestamp: new Date().toISOString() }
@@ -124,9 +126,10 @@ describe("Credential Controller", () => {
           '@context': ['https://www.w3.org/2018/credentials/v1'],
           type: ['VerifiableCredential', 'AICredential'],
           issuer: { id: 'did:example:123' },
+          id: 'urn:uuid:456',
           issuanceDate: new Date().toISOString(),
           credentialSubject: {
-            id: 'urn:uuid:123',
+            id: 'urn:uuid:abc',
             modelInfo: { name: "DALL-E", version: "2.0", provider: "OpenAI" },
             input: { prompt: "Question 2", timestamp: new Date().toISOString() },
             output: { response: "Answer 2", timestamp: new Date().toISOString() }
@@ -178,6 +181,7 @@ describe("Credential Controller", () => {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
       type: ['VerifiableCredential', 'AICredential'],
       issuer: { id: 'did:example:123' },
+      id: 'urn:uuid:456',
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
         id: 'urn:uuid:123',

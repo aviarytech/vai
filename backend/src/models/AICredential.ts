@@ -41,7 +41,7 @@ export interface AICredential extends Omit<Document, 'id'>, IVerifiableCredentia
 
 const aiCredentialSchema = new Schema<AICredential>(
   {
-    id: { type: String, required: true, unique: true },
+    id: { type: String, unique: true },
     '@context': { type: [String], required: true },
     type: { type: [String], required: true },
     issuer: {

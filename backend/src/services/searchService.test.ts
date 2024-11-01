@@ -31,6 +31,7 @@ describe('SearchService', () => {
       '@context': ['https://www.w3.org/2018/credentials/v1'],
       type: ['VerifiableCredential', 'AICredential'],
       issuer: { id: 'did:example:123' },
+      id: 'urn:uuid:123',
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
         id: 'urn:uuid:123',
