@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // Base interface without Document properties
 export interface IVerifiableCredential {
-  id: string;
+  id?: string;
   '@context': string[];
   type: string[];
   issuer: {

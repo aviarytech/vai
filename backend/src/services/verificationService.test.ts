@@ -10,6 +10,7 @@ describe("VerificationService", () => {
       issuer: { id: 'did:example:123' },
       issuanceDate: new Date().toISOString(),
       credentialSubject: {
+        id: 'urn:uuid:123',
         modelInfo: {
           name: "GPT-4",
           version: "1.0",
@@ -47,6 +48,7 @@ describe("VerificationService", () => {
       issuer: { id: "did:example:123" },
       issuanceDate: "2024-03-20T10:00:00Z",
       credentialSubject: {
+        id: 'urn:uuid:123',
         modelInfo: {
           name: "GPT-4",
           version: "1.0",
@@ -82,6 +84,7 @@ describe("VerificationService", () => {
       issuer: { id: "did:example:123" },
       issuanceDate: "2024-03-20T10:00:00Z",
       credentialSubject: {
+        id: 'urn:uuid:123',
         modelInfo: {
           name: "",
           version: "",

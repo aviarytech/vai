@@ -32,7 +32,7 @@ describe("Credential Controller", () => {
   });
 
   describe("createCredential", () => {
-    it.only("should create a new credential", async () => {
+    it("should create a new credential", async () => {
       const credentialData = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'AICredential'],
