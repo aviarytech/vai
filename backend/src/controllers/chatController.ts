@@ -33,7 +33,7 @@ export const chatController = new Elysia({ prefix: '/api' })
         success: true,
         response: chatResult.response,
         conversationId,
-        credentialId: conversationId
+        credentialId: chatResult.verifiableCredential.id
       };
     } catch (error) {
       console.error('Chat error:', error);

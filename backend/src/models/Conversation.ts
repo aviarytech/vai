@@ -1,21 +1,19 @@
-import { Schema, model } from 'mongoose'
-
-export interface IConversation {
-  _id?: string
-  id: string
-  createdAt: Date
-  updatedAt: Date
-}
+import mongoose, { Document } from 'mongoose';
 
 export interface ConversationWithVP extends IConversation {
-  verifiablePresentation: {
-    "@context": string[]
-    type: string[]
-    verifiableCredential: any[]
-  }
+  verifiablePresentation: any;
 }
 
-const conversationSchema = new Schema<IConversation>({
+export interface IConversation extends Document {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  published: boolean;
+  publishedAt: Date | null;
+  publishedUrl: string | null;
+}
+
+const ConversationSchema = new mongoose.Schema({
   id: { 
     type: String, 
     required: true, 
@@ -23,7 +21,20 @@ const conversationSchema = new Schema<IConversation>({
     index: true 
   },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-})
+  updatedAt: { type: Date, default: Date.now },
+  published: {
+    type: Boolean,
+    default: false
+  },
+  publishedAt: {
+    type: Date,
+    default: null
+  },
+  publishedUrl: {
+    type: String,
+    default: null
+  }
+});
 
-export const Conversation = model<IConversation>('Conversation', conversationSchema) 
+export const Conversation = mongoose.model<IConversation>('Conversation', ConversationSchema);
+export default Conversation; 

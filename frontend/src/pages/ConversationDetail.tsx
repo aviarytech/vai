@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { ConversationWithVP } from '../../../backend/src/models/Conversation'
 import { CONFIG } from '../config'
+import { IVerifiableCredential } from '../../../backend/src/models/AICredential'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -27,6 +28,7 @@ export function ConversationDetail() {
         const data = await response.json()
         
         if (data.success) {
+          console.log(data.data)
           setConversation(data.data)
         } else {
           setError(data.error)
@@ -46,7 +48,7 @@ export function ConversationDetail() {
   if (!conversation) return <div>Conversation not found</div>
 
   // Convert VCs into a flat array of messages
-  const messages: Message[] = conversation.verifiablePresentation.verifiableCredential.flatMap(vc => {
+  const messages: Message[] = conversation.verifiablePresentation.verifiableCredential.flatMap((vc: IVerifiableCredential) => {
     const messages: Message[] = []
     
     // Add user message
@@ -70,12 +72,13 @@ export function ConversationDetail() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Conversation</h1>
       <div className="space-y-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${
+              message.role === 'user' ? 'justify-end' : 'justify-start'
+            }`}
           >
             <div
               className={`max-w-[80%] rounded-lg p-4 ${
@@ -84,27 +87,21 @@ export function ConversationDetail() {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
-              <div className="mt-2 text-xs opacity-75">
-                <span>{new Date(message.timestamp).toLocaleString()}</span>
-                {message.role === 'assistant' && message.modelInfo && (
-                  <>
-                    <span className="mx-2">•</span>
-                    <span>
-                      {message.modelInfo.name} ({message.modelInfo.provider})
-                    </span>
-                    {message.id && (
-                      <a
-                        href={`/verify?id=${message.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2 underline"
-                      >
-                        Verify
-                      </a>
-                    )}
-                  </>
-                )}
+              <p>{message.content}</p>
+              {message.id && message.role === 'assistant' && (
+                <div className="mt-2 text-xs opacity-75">
+                  <a
+                    href={`/verify?id=${message.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    See Context
+                  </a>
+                </div>
+              )}
+              <div className="mt-1 text-xs opacity-75">
+                {new Date(message.timestamp).toLocaleString()}
               </div>
             </div>
           </div>

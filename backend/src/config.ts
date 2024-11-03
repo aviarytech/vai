@@ -10,5 +10,7 @@ export const CONFIG = {
   },
   ACES_API_URL: process.env.ACES_API_URL || 'http://localhost:5151/api',
   ACES_API_KEY: process.env.ACES_API_KEY,
-  ACES_TEMPLATE_ID: process.env.ACES_TEMPLATE_ID || 'ai-interaction-credential'
+  ACES_TEMPLATE_ID: process.env.ACES_TEMPLATE_ID || 'ai-interaction-credential',
+  CHEQD_API_KEY: process.env.CHEQD_API_KEY || 'your-default-api-key',
+  CHEQD_DID: process.env.CHEQD_DID || 'your-default-did'
 };

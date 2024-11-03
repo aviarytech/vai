@@ -10,10 +10,16 @@ interface Message {
 }
 
 interface VerifiableCredential {
+  id: string;
   credentialSubject: {
-    role: 'user' | 'assistant';
-    message: string;
-    timestamp: string;
+    input?: {
+      prompt: string;
+      timestamp: string;
+    };
+    output?: {
+      response: string;
+      timestamp: string;
+    };
     id: string;
   }
 }
@@ -25,6 +31,8 @@ function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [shouldFocus, setShouldFocus] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [, setPublishError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConversation = async () => {
@@ -38,13 +46,28 @@ function ChatInterface() {
 
         const data = await response.json();
         if (data.success && data.data.verifiablePresentation) {
-          const loadedMessages = data.data.verifiablePresentation.verifiableCredential.map(
-            (vc: VerifiableCredential) => ({
-              role: vc.credentialSubject.role,
-              content: vc.credentialSubject.message,
-              credentialId: vc.credentialSubject.id,
-              timestamp: vc.credentialSubject.timestamp
-            })
+          const loadedMessages: Message[] = [];
+          
+          // Process each credential and create both user and assistant messages
+          data.data.verifiablePresentation.verifiableCredential.forEach(
+            (vc: VerifiableCredential) => {
+              if (vc.credentialSubject.input) {
+                loadedMessages.push({
+                  role: 'user',
+                  content: vc.credentialSubject.input.prompt,
+                  credentialId: vc.id,
+                  timestamp: vc.credentialSubject.input.timestamp
+                });
+              }
+              if (vc.credentialSubject.output) {
+                loadedMessages.push({
+                  role: 'assistant',
+                  content: vc.credentialSubject.output.response,
+                  credentialId: vc.id,
+                  timestamp: vc.credentialSubject.output.timestamp
+                });
+              }
+            }
           );
           setMessages(loadedMessages);
         }
@@ -101,7 +124,7 @@ function ChatInterface() {
       if (!data.success) {
         throw new Error(data.error || 'Failed to get response');
       }
-
+      console.log(data);
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.response,
@@ -129,6 +152,37 @@ function ChatInterface() {
     setShouldFocus(true);
   }, []);
 
+  const handlePublish = async () => {
+    if (!conversationId) return;
+    
+    setIsPublishing(true);
+    setPublishError(null);
+    
+    try {
+      const response = await fetch(`${CONFIG.API_BASE_URL}/conversations/${conversationId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to publish conversation');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        // Show success message
+        alert('Conversation published successfully!');
+      }
+    } catch (error) {
+      console.error('Error publishing conversation:', error);
+      setPublishError('Failed to publish conversation');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   return (
     <div className="relative h-full min-h-screen pb-24">
       <div className="max-w-4xl mx-auto p-4 space-y-4 mb-24">
@@ -147,15 +201,13 @@ function ChatInterface() {
               }`}
             >
               <p>{message.content}</p>
-              {message.credentialId && (
+              {message.credentialId && message.role === 'assistant' && (
                 <div className="mt-2 text-xs opacity-75">
                   <a
                     href={`/verify?id=${message.credentialId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="underline"
                   >
-                    Verify Response
+                    See Context
                   </a>
                 </div>
               )}
@@ -190,6 +242,30 @@ function ChatInterface() {
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
             >
               Send
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Are you sure you want to publish this conversation? This action cannot be undone.')) {
+                  handlePublish();
+                }
+              }}
+              disabled={isPublishing}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
+              >
+                <path 
+                  fillRule="evenodd" 
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" 
+                  clipRule="evenodd" 
+                />
+              </svg>
+              {isPublishing ? 'Publishing...' : 'Publish'}
             </button>
           </div>
         </form>

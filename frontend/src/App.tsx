@@ -4,6 +4,8 @@ import { Conversations } from './pages/Conversations'
 import { ConversationDetail } from './pages/ConversationDetail'
 import ChatInterface from './components/ChatInterface'
 import { Landing } from './pages/Landing'
+import VerifyCredential from './components/VerifyCredential'
+import { PublicSquare } from './components/PublicSquare'
 
 export function App() {
   return (
@@ -16,6 +18,8 @@ export function App() {
             <Route path="/chat/:id" element={<ChatInterface />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/conversation/:id" element={<ConversationDetail />} />
+            <Route path="/verify" element={<VerifyCredential />} />
+            <Route path="/public-square" element={<PublicSquare />} />
           </Routes>
         </main>
       </div>

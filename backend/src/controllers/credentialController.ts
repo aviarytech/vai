@@ -251,4 +251,35 @@ export const credentialController = new Elysia({ prefix: '/api' })
       set.status = 500;
       return { error: 'Internal server error' };
     }
+  })
+  .get('/credentials/:id', async ({ params, set }) => {
+    const AICredential = getAICredentialModel();
+    
+    try {
+      // Get the current credential using the id field (UUID)
+      const currentCredential = await AICredential.findOne({ id: params.id });
+      if (!currentCredential) {
+        set.status = 404;
+        return { error: 'Credential not found' };
+      }
+
+      // Get previous messages if they exist
+      const previousMessageIds = currentCredential.credentialSubject.input.previousMessages || [];
+      const previousCredentials = await AICredential.find({
+        'id': { $in: previousMessageIds }
+      }).sort({ 'credentialSubject.input.timestamp': 1 });
+
+      return {
+        currentCredential,
+        previousCredentials
+      };
+    } catch (error) {
+      console.error('Error fetching credential context:', error);
+      set.status = 500;
+      return { error: 'Internal server error' };
+    }
+  }, {
+    params: t.Object({
+      id: t.String()
+    })
   });

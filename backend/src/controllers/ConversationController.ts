@@ -1,8 +1,15 @@
-import { Conversation, ConversationWithVP } from '../models/Conversation'
+import { Conversation } from '../models/Conversation'
 import { randomUUID } from 'crypto'
 import { getAICredentialModel } from '../models/AICredential'
+import { DIDResourceService } from '../services/didResourceService';
 
 export class ConversationController {
+  private didResourceService: DIDResourceService;
+
+  constructor() {
+    this.didResourceService = new DIDResourceService();
+  }
+
   async getAllConversations() {
     try {
       const conversations = await Conversation.find()
@@ -35,6 +42,7 @@ export class ConversationController {
       // Add counts and first messages to conversations
       const conversationsWithData = conversations.map(conversation => {
         const data = dataMap.get(conversation.id) || { count: 0, firstMessage: null };
+        
         return {
           ...conversation.toObject(),
           messageCount: data.count,
@@ -100,6 +108,44 @@ export class ConversationController {
     } catch (error) {
       console.error('Create conversation error:', error)
       return { success: false, error: 'Failed to create conversation' }
+    }
+  }
+
+  async publishConversation(id: string) {
+    try {
+      const conversation = await Conversation.findOne({ id });
+      if (!conversation) {
+        return { success: false, error: 'Conversation not found' };
+      }
+      // Get the verifiable presentation
+      const result = await this.getConversationById(id);
+      if (!result.success) {
+        return { success: false, error: 'Failed to get conversation data' };
+      }
+
+      const { verifiablePresentation } = result.data as { verifiablePresentation: any };
+      // Publish to Cheqd network
+      const published = await this.didResourceService.publishResource(
+        id,
+        verifiablePresentation
+      );
+
+      if (!published) {
+        return { success: false, error: 'Failed to publish to Cheqd network' };
+      }
+
+      // Update conversation with published status
+      conversation.published = true;
+      conversation.publishedAt = new Date();
+      await conversation.save();
+
+      return { 
+        success: true, 
+        data: conversation.toObject()
+      };
+    } catch (error) {
+      console.error('Error publishing conversation:', error);
+      return { success: false, error: 'Failed to publish conversation' };
     }
   }
 } 

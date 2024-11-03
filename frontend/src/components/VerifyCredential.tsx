@@ -1,198 +1,119 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { CONFIG } from '../config';
+import { IVerifiableCredential } from '../../../backend/src/models/AICredential';
 
-interface VerificationResult {
-  isValid: boolean;
-  details: {
-    modelVerified: boolean;
-    timestampVerified: boolean;
-    inputOutputMatch: boolean;
-  };
-  error?: string;
-}
-
-interface AICredential {
-  modelInfo: {
-    name: string;
-    version: string;
-    provider: string;
-  };
-  input: {
-    prompt: string;
-    timestamp: string;
-  };
-  output: {
-    response: string;
-    timestamp: string;
-  };
+interface ConversationContext {
+  currentCredential: IVerifiableCredential;
+  previousCredentials: IVerifiableCredential[];
 }
 
 function VerifyCredential() {
-  const [credentialId, setCredentialId] = useState('');
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [, setJsonFile] = useState<File | null>(null);
-  const [credential, setCredential] = useState<AICredential | null>(null);
+  const [searchParams] = useSearchParams();
+  const [context, setContext] = useState<ConversationContext | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    const credentialId = searchParams.get('id');
+    if (credentialId) {
+      fetchCredentialContext(credentialId);
+    }
+  }, [searchParams]);
+
+  const fetchCredentialContext = async (id: string) => {
     setLoading(true);
-    setError('');
-    setVerificationResult(null);
-
     try {
-      const response = await fetch('/api/credentials/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentialId ? { credentialId } : credential),
-      });
-
+      const response = await fetch(`${CONFIG.API_BASE_URL}/credentials/${id}`);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Verification failed');
+        throw new Error('Failed to fetch credential context');
       }
-
-      const result = await response.json();
-      setVerificationResult(result);
+      const contextData = await response.json();
+      setContext(contextData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to verify credential');
+      setError(err instanceof Error ? err.message : 'Failed to fetch context');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setJsonFile(file);
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        setCredential(json);
-        setCredentialId(''); // Clear ID when file is uploaded
-      } catch {
-        setError('Invalid JSON file');
-        setCredential(null);
-      }
-    }
-  };
+  const renderContext = () => {
+    if (!context) return null;
 
-  return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Verify AI Credential</h1>
-      
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-4">Choose Verification Method</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Verify by Credential ID
-              </label>
-              <input
-                type="text"
-                value={credentialId}
-                onChange={(e) => {
-                  setCredentialId(e.target.value);
-                  setCredential(null);
-                  setJsonFile(null);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter credential ID"
-                disabled={!!credential}
-              />
+    return (
+      <div className="mt-8 space-y-4">
+        {context.previousCredentials.map((vc, index) => (
+          <div key={index} className="space-y-4">
+            {/* User message */}
+            <div className="flex justify-end">
+              <div className="max-w-[80%] bg-blue-500 text-white rounded-lg p-4">
+                <p>{vc.credentialSubject.input.prompt}</p>
+                <p className="text-xs opacity-75 mt-1">
+                  {new Date(vc.credentialSubject.input.timestamp).toLocaleString()}
+                </p>
+              </div>
             </div>
             
-            <div className="border-t pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Or Upload Credential JSON
-              </label>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleFileUpload}
-                className="w-full"
-                disabled={!!credentialId}
-              />
+            {/* Assistant message */}
+            <div className="flex justify-start">
+              <div className="max-w-[80%] bg-gray-100 rounded-lg p-4">
+                <p className="text-xs text-gray-500 mb-2">
+                  {vc.credentialSubject.modelInfo.name}
+                </p>
+                <p>{vc.credentialSubject.output.response}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(vc.credentialSubject.output.timestamp).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {/* Current messages */}
+        <div className="space-y-4">
+          {/* Current user message */}
+          <div className="flex justify-end">
+            <div className="max-w-[80%] bg-blue-500 text-white rounded-lg p-4">
+              <p>{context.currentCredential.credentialSubject.input.prompt}</p>
+              <p className="text-xs opacity-75 mt-1">
+                {new Date(context.currentCredential.credentialSubject.input.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+          
+          {/* Current assistant message */}
+          <div className="flex justify-start">
+            <div className="max-w-[80%] bg-gray-100 rounded-lg p-4 border-2 border-blue-500">
+              <p className="text-xs text-gray-500 mb-2">
+                {context.currentCredential.credentialSubject.modelInfo.name}
+              </p>
+              <p>{context.currentCredential.credentialSubject.output.response}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                {new Date(context.currentCredential.credentialSubject.output.timestamp).toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
-
-        {credential && (
-          <div className="mb-4 p-4 bg-gray-50 rounded-md">
-            <h3 className="font-medium mb-2">Uploaded Credential Preview:</h3>
-            <pre className="text-sm overflow-auto max-h-40">
-              {JSON.stringify(credential, null, 2)}
-            </pre>
-          </div>
-        )}
-        
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading || (!credentialId && !credential)}
-          className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-        >
-          {loading ? 'Verifying...' : 'Verify Credential'}
-        </button>
       </div>
+    );
+  };
 
+  return (
+    <div className="max-w-2xl mx-auto p-4">
       {error && (
         <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
           <p className="text-red-700">{error}</p>
         </div>
       )}
-
-      {verificationResult && (
-        <div className={`bg-${verificationResult.isValid ? 'green' : 'yellow'}-50 border-l-4 border-${verificationResult.isValid ? 'green' : 'yellow'}-400 p-4`}>
-          <h2 className="text-lg font-semibold mb-2">
-            Verification Result: {verificationResult.isValid ? 'Valid' : 'Invalid'}
-          </h2>
-          <ul className="space-y-2">
-            <li className="flex items-center">
-              <span className={`mr-2 ${verificationResult.details.modelVerified ? 'text-green-600' : 'text-red-600'}`}>
-                {verificationResult.details.modelVerified ? '✓' : '✗'}
-              </span>
-              <div>
-                <span className="font-medium">Model Information</span>
-                <p className="text-sm text-gray-600">
-                  {verificationResult.details.modelVerified 
-                    ? 'Valid model information provided' 
-                    : 'Missing or invalid model information'}
-                </p>
-              </div>
-            </li>
-            <li className="flex items-center">
-              <span className={`mr-2 ${verificationResult.details.timestampVerified ? 'text-green-600' : 'text-red-600'}`}>
-                {verificationResult.details.timestampVerified ? '✓' : '✗'}
-              </span>
-              <div>
-                <span className="font-medium">Timestamp Verification</span>
-                <p className="text-sm text-gray-600">
-                  {verificationResult.details.timestampVerified 
-                    ? 'Input timestamp precedes output timestamp' 
-                    : 'Invalid timestamp sequence'}
-                </p>
-              </div>
-            </li>
-            <li className="flex items-center">
-              <span className={`mr-2 ${verificationResult.details.inputOutputMatch ? 'text-green-600' : 'text-red-600'}`}>
-                {verificationResult.details.inputOutputMatch ? '✓' : '✗'}
-              </span>
-              <div>
-                <span className="font-medium">Input/Output Consistency</span>
-                <p className="text-sm text-gray-600">
-                  {verificationResult.details.inputOutputMatch 
-                    ? 'Valid input/output pair' 
-                    : 'Missing or invalid input/output data'}
-                </p>
-              </div>
-            </li>
-          </ul>
+      
+      {loading && (
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading conversation...</p>
         </div>
       )}
+      
+      {context && renderContext()}
     </div>
   );
 }
