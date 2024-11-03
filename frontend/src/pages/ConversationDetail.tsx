@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { ConversationWithVP } from '../../../backend/src/models/Conversation'
 import { CONFIG } from '../config'
 import { IVerifiableCredential } from '../../../backend/src/models/AICredential'
+import { VerificationBadge } from '../components/VerificationBadge'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -13,6 +14,7 @@ interface Message {
     provider: string
   }
   id?: string
+  issuer?: string
 }
 
 export function ConversationDetail() {
@@ -58,13 +60,14 @@ export function ConversationDetail() {
       timestamp: vc.credentialSubject.input.timestamp
     })
 
-    // Add assistant message
+    // Add assistant message with issuer
     messages.push({
       role: 'assistant',
       content: vc.credentialSubject.output.response,
       timestamp: vc.credentialSubject.output.timestamp,
       modelInfo: vc.credentialSubject.modelInfo,
-      id: vc.id
+      id: vc.id,
+      issuer: typeof vc.issuer === 'string' ? vc.issuer : vc.issuer.name || 'Unknown'
     })
 
     return messages
@@ -87,7 +90,9 @@ export function ConversationDetail() {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>{message.content}</p>
+              <div className="relative w-full">
+                <p>{message.content}</p>
+              </div>
               {message.id && message.role === 'assistant' && (
                 <div className="mt-2 text-xs opacity-75">
                   <a
@@ -100,8 +105,13 @@ export function ConversationDetail() {
                   </a>
                 </div>
               )}
-              <div className="mt-1 text-xs opacity-75">
+              <div className="mt-1 text-xs opacity-75 flex gap-2 justify-end items-center">
                 {new Date(message.timestamp).toLocaleString()}
+                {message.id && message.role === 'assistant' && message.issuer && (
+                  <div className="">
+                    <VerificationBadge issuer={message.issuer} />
+                  </div>
+                )}
               </div>
             </div>
           </div>

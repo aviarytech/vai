@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { CONFIG } from '../config';
 import { IVerifiableCredential } from '../../../backend/src/models/AICredential';
+import { VerificationBadge } from './VerificationBadge';
 
 interface IVerifiablePresentation {
   "@context": string[];
@@ -87,7 +88,9 @@ export function PublicSquare() {
                         {new Date(vc.credentialSubject.input.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="whitespace-pre-wrap">{vc.credentialSubject.input.prompt}</p>
+                    <div className="relative">
+                      <p className="whitespace-pre-wrap">{vc.credentialSubject.input.prompt}</p>
+                    </div>
                   </div>
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <div className="flex justify-between items-start mb-1">
@@ -96,7 +99,14 @@ export function PublicSquare() {
                         {new Date(vc.credentialSubject.output.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
-                    <p className="whitespace-pre-wrap">{vc.credentialSubject.output.response}</p>
+                    <div className="relative">
+                      <p className="whitespace-pre-wrap">{vc.credentialSubject.output.response}</p>
+                      <div className="absolute bottom-0 right-0">
+                        <VerificationBadge issuer={
+                          typeof vc.issuer === 'string' ? vc.issuer : vc.issuer.name || 'Unknown'
+                        } />
+                      </div>
+                    </div>
                     {vc.credentialSubject.modelInfo && (
                       <div className="mt-2 text-xs text-gray-500">
                         Model: {vc.credentialSubject.modelInfo.version}

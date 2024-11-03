@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { CONFIG } from '../config';
+import { VerificationBadge } from './VerificationBadge';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
   credentialId?: string;
+  issuerName: string;
   timestamp: string;
 }
 
 interface VerifiableCredential {
   id: string;
+  issuer: {
+    name: string;
+  } | string;
   credentialSubject: {
     input?: {
       prompt: string;
@@ -56,6 +61,7 @@ function ChatInterface() {
                   role: 'user',
                   content: vc.credentialSubject.input.prompt,
                   credentialId: vc.id,
+                  issuerName: typeof vc.issuer === 'string' ? vc.issuer : vc.issuer.name,
                   timestamp: vc.credentialSubject.input.timestamp
                 });
               }
@@ -64,6 +70,7 @@ function ChatInterface() {
                   role: 'assistant',
                   content: vc.credentialSubject.output.response,
                   credentialId: vc.id,
+                  issuerName: typeof vc.issuer === 'string' ? vc.issuer : vc.issuer.name,
                   timestamp: vc.credentialSubject.output.timestamp
                 });
               }
@@ -94,6 +101,7 @@ function ChatInterface() {
     const userMessage: Message = {
       role: 'user',
       content: inputMessage,
+      issuerName: 'TBD',
       timestamp: new Date().toISOString()
     };
 
@@ -124,11 +132,11 @@ function ChatInterface() {
       if (!data.success) {
         throw new Error(data.error || 'Failed to get response');
       }
-      console.log(data);
       const assistantMessage: Message = {
         role: 'assistant',
         content: data.response,
         credentialId: data.credentialId,
+        issuerName: 'TBD',
         timestamp: new Date().toISOString()
       };
 
@@ -139,7 +147,8 @@ function ChatInterface() {
       setMessages(prev => [...prev, {
         role: 'assistant',
         content: error instanceof Error ? error.message : 'An error occurred',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        issuerName: 'N/A'
       }]);
     } finally {
       setIsLoading(false);
@@ -200,15 +209,24 @@ function ChatInterface() {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>{message.content}</p>
+              <div className="flex items-start gap-2">
+                <div className="relative w-full">
+                  <p>{message.content}</p>
+                </div>
+              </div>
               {message.credentialId && message.role === 'assistant' && (
-                <div className="mt-2 text-xs opacity-75">
+                <div className="mt-2 text-xs opacity-75 flex gap-2 justify-end items-center">
                   <a
                     href={`/verify?id=${message.credentialId}`}
                     className="underline"
                   >
                     See Context
                   </a>
+                  {message.credentialId && message.role === 'assistant' && (
+                    <div className="">
+                      <VerificationBadge issuer={message.issuerName} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
