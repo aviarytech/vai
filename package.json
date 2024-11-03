@@ -8,8 +8,7 @@
     "start:backend": "cd backend && bun start"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "concurrently": "^8.2.0"
+    "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
